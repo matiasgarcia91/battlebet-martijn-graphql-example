@@ -19,7 +19,7 @@ async function CheckAuth(req) {
     if (!user) {
       throw new AuthenticationError("User does not exist");
     }
-    return user;
+    return user.dataValues;
   } catch (error) {
     console.log("ERROR IN AUTH MIDDLEWARE", error);
     switch (error.name) {
@@ -40,6 +40,10 @@ module.exports = {
     },
     apolloError: (parent, args, context) => {
       throw new ApolloError();
+    },
+    checkToken: async (parent, _args, { req }, info) => {
+      const user = await CheckAuth(req);
+      return user;
     },
     user(parent, { id }, { db }, info) {
       return db.User.findByPk(id);
@@ -67,12 +71,18 @@ module.exports = {
     },
   },
   Mutation: {
-    createUser: (parent, { name, email, password }, { db }, info) =>
-      db.User.create({
+    signup: async (parent, { name, email, password }, { db }, info) => {
+      const user = await db.User.create({
         name: name,
         email: email,
         password: bcrypt.hashSync(password, SALT_ROUNDS),
-      }),
+      });
+      console.log(user);
+
+      delete user.dataValues["password"];
+      const token = toJWT({ usrId: user.dataValues.id });
+      return { token, user: user.dataValues };
+    },
     login: async (parent, { email, password }, { db }, info) => {
       const usr = await db.User.findOne({ where: { email } });
       if (!usr) return new ApolloError("User with that email not found", 400);

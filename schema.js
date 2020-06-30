@@ -81,10 +81,11 @@ const typeDefs = gql`
     tournaments: [Tournament]
     playergroup(TournamentId: ID!): PlayerGroup
     users: [User]
+    checkToken: User
   }
 
   type Mutation {
-    createUser(name: String!, email: String!, password: String!): User!
+    signup(name: String!, email: String!, password: String!): Login!
     login(email: String!, password: String!): Login!
     createTournament(name: String!): Tournament!
     joinTournament(TournamentId: Int!): SuccesJoinTournament!
