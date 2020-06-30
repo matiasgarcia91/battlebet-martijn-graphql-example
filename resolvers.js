@@ -61,7 +61,9 @@ module.exports = {
       return dataSources.apiFootball.getFixturesOfLeague(league_id);
     },
     tournaments: async (parent, _args, { db }, info) => {
-      return db.Tournament.findAll();
+      return db.Tournament.findAll({
+        include: [{ model: db.User }],
+      });
     },
     playergroup: async (parent, { TournamentId }, { db }, info) => {
       return db.PlayerGroup.findOne({
@@ -96,14 +98,16 @@ module.exports = {
       const usr = await CheckAuth(req);
       const tourn = await db.Tournament.create({
         name: name,
-        UserId: usr.dataValues.id,
+        UserId: usr.id,
       });
       if (!tourn) return new ApolloError("Tournament not created", 400);
-      const plyrgr = await db.PlayerGroup.create({ TournamentId: tourn.id });
+      const plyrgr = await db.PlayerGroup.create({
+        TournamentId: tourn.dataValues.id,
+      });
       if (plyrgr)
         db.UsersPlayerGroup.create({
-          PlayerGroupId: plyrgr.id,
-          UserId: usr.dataValues.id,
+          PlayerGroupId: plyrgr.dataValues.id,
+          UserId: usr.id,
         });
       return tourn;
     },
@@ -112,7 +116,7 @@ module.exports = {
       const plyrgr = await db.PlayerGroup.findOne({ where: { TournamentId } });
       if (!plyrgr) return new ApolloError("Player Group not found", 400);
       const addPlayer = await db.UsersPlayerGroup.create({
-        UserId: usr.dataValues.id,
+        UserId: usr.id,
         PlayerGroupId: plyrgr.dataValues.id,
       });
       if (addPlayer)

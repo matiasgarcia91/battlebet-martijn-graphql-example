@@ -1,6 +1,8 @@
 const { gql } = require("apollo-server");
 
 const typeDefs = gql`
+  scalar Date
+
   type User {
     id: ID!
     name: String!
@@ -54,6 +56,8 @@ const typeDefs = gql`
     id: ID!
     name: String!
     AdminId: ID!
+    User: User
+    createdAt: Date
   }
 
   type SuccesJoinTournament {
