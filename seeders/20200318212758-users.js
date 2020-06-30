@@ -3,9 +3,10 @@ const bcrypt = require("bcrypt");
 const { SALT_ROUNDS } = require("../config/constants");
 const faker = require("faker");
 const users = [...Array(10)].map((user) => ({
-  name: faker.name.firstName(),
+  userName: faker.name.firstName(),
   email: faker.internet.email(),
   password: bcrypt.hashSync(faker.internet.password(8), SALT_ROUNDS),
+  avatar: "https://i.imgur.com/m0pGSHF.png",
   createdAt: new Date(),
   updatedAt: new Date(),
 }));

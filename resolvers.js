@@ -48,9 +48,6 @@ module.exports = {
     user(parent, { id }, { db }, info) {
       return db.User.findByPk(id);
     },
-    users(parent, _args, { db }, info) {
-      return db.User.findAll();
-    },
     leagues: async (_source, _args, { dataSources }) => {
       return dataSources.apiFootball.getLeagues();
     },
@@ -62,7 +59,10 @@ module.exports = {
     },
     tournaments: async (parent, _args, { db }, info) => {
       return db.Tournament.findAll({
-        include: [{ model: db.User }],
+        include: [
+          { model: db.User },
+          { model: db.PlayerGroup, include: [{ model: db.User }] },
+        ],
       });
     },
     playergroup: async (parent, { TournamentId }, { db }, info) => {
@@ -73,14 +73,13 @@ module.exports = {
     },
   },
   Mutation: {
-    signup: async (parent, { name, email, password }, { db }, info) => {
+    signup: async (parent, { userName, email, password }, { db }, info) => {
       const user = await db.User.create({
-        name: name,
+        userName: userName,
         email: email,
         password: bcrypt.hashSync(password, SALT_ROUNDS),
+        avatar: "https://i.imgur.com/m0pGSHF.png",
       });
-      console.log(user);
-
       delete user.dataValues["password"];
       const token = toJWT({ usrId: user.dataValues.id });
       return { token, user: user.dataValues };

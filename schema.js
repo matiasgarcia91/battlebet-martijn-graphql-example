@@ -5,8 +5,9 @@ const typeDefs = gql`
 
   type User {
     id: ID!
-    name: String!
+    userName: String!
     email: String!
+    avatar: String!
   }
 
   type League {
@@ -55,9 +56,9 @@ const typeDefs = gql`
   type Tournament {
     id: ID!
     name: String!
-    AdminId: ID!
     User: User
     createdAt: Date
+    PlayerGroup: PlayerGroup
   }
 
   type SuccesJoinTournament {
@@ -89,7 +90,7 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    signup(name: String!, email: String!, password: String!): Login!
+    signup(userName: String!, email: String!, password: String!): Login!
     login(email: String!, password: String!): Login!
     createTournament(name: String!): Tournament!
     joinTournament(TournamentId: Int!): SuccesJoinTournament!
