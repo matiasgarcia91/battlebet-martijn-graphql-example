@@ -4,11 +4,11 @@ module.exports = (sequelize, DataTypes) => {
     "UsersPlayerGroup",
     {
       UserId: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
       PlayerGroupId: {
-        type: DataTypes.NUMBER,
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
     },

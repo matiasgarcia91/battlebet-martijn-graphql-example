@@ -26,9 +26,22 @@ module.exports = (sequelize, DataTypes) => {
   );
   User.associate = function (models) {
     User.hasMany(models.Tournament);
+    User.hasMany(models.Prediction);
     User.belongsToMany(models.PlayerGroup, {
       through: "UsersPlayerGroup",
       foreignKey: "UserId",
+    });
+    User.hasMany(models.Match, {
+      as: "player1User",
+      foreignKey: { name: "player1" },
+    });
+    User.hasMany(models.Match, {
+      as: "player2User",
+      foreignKey: { name: "player2" },
+    });
+    User.hasMany(models.Match, {
+      as: "winnerUser",
+      foreignKey: { name: "winner" },
     });
   };
   return User;

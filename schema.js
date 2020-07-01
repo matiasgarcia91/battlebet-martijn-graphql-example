@@ -61,10 +61,6 @@ const typeDefs = gql`
     PlayerGroup: PlayerGroup
   }
 
-  type SuccesJoinTournament {
-    message: String!
-  }
-
   type Login {
     token: String!
     user: User!
@@ -84,6 +80,7 @@ const typeDefs = gql`
     readError: String
     apolloError: String
     tournaments: [Tournament]
+    tournament(TournamentId: ID!): Tournament
     playergroup(TournamentId: ID!): PlayerGroup
     users: [User]
     checkToken: User
@@ -93,7 +90,7 @@ const typeDefs = gql`
     signup(userName: String!, email: String!, password: String!): Login!
     login(email: String!, password: String!): Login!
     createTournament(name: String!): Tournament!
-    joinTournament(TournamentId: Int!): SuccesJoinTournament!
+    joinTournament(TournamentId: ID!): Tournament!
   }
 `;
 

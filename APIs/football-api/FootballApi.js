@@ -1,5 +1,5 @@
 const { RESTDataSource } = require("apollo-datasource-rest");
-const token = `?Authorization=xYpbUJDFAz7atG22xgifQ7G5syB2gWY36TpdCPfS`;
+const token = `Authorization=xYpbUJDFAz7atG22xgifQ7G5syB2gWY36TpdCPfS`;
 
 module.exports = class FootballAPI extends RESTDataSource {
   constructor() {
@@ -8,9 +8,14 @@ module.exports = class FootballAPI extends RESTDataSource {
   }
 
   async getCompetitions() {
-    const data = await this.get(`competitions${token}`);
+    const data = await this.get(`competitions?${token}`);
     console.log(data);
     return data;
+  }
+
+  async getMatches(id) {
+    const data = await this.get(`matches?comp_id=${id}&${token}`);
+    console.log(data);
   }
 };
 

@@ -58,7 +58,18 @@ module.exports = {
       return dataSources.apiFootball.getFixturesOfLeague(league_id);
     },
     tournaments: async (parent, _args, { db }, info) => {
-      return db.Tournament.findAll({
+      let t = await db.Tournament.findAll({
+        include: [
+          { model: db.User },
+          { model: db.PlayerGroup, include: [{ model: db.User }] },
+        ],
+      });
+      console.log(t);
+      return t;
+    },
+    tournament: async (parent, { TournamentId }, { db }, info) => {
+      return db.Tournament.findOne({
+        where: { id: TournamentId },
         include: [
           { model: db.User },
           { model: db.PlayerGroup, include: [{ model: db.User }] },
@@ -112,14 +123,28 @@ module.exports = {
     },
     joinTournament: async (parent, { TournamentId }, { db, req }, info) => {
       const usr = await CheckAuth(req);
-      const plyrgr = await db.PlayerGroup.findOne({ where: { TournamentId } });
+      const plyrgr = await db.PlayerGroup.findOne({
+        where: { TournamentId },
+        include: [{ model: db.User }],
+      });
       if (!plyrgr) return new ApolloError("Player Group not found", 400);
+      console.log(plyrgr);
+      if (plyrgr.dataValues.Users.map((plyr) => plyr.id).includes(usr.id))
+        return new ApolloError("You are already in this tournament", 400);
       const addPlayer = await db.UsersPlayerGroup.create({
         UserId: usr.id,
         PlayerGroupId: plyrgr.dataValues.id,
       });
-      if (addPlayer)
-        return { message: "You've succesfully been added to the tournament" };
+      if (addPlayer) {
+        return db.Tournament.findOne({
+          where: { id: TournamentId },
+          include: [
+            { model: db.User },
+            { model: db.PlayerGroup, include: [{ model: db.User }] },
+          ],
+        });
+      }
+      return new ApolloError("Something went wrong", 400);
     },
   },
 };
