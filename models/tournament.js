@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
     Tournament.belongsTo(models.User);
     Tournament.hasOne(models.PlayerGroup);
     Tournament.hasMany(models.Round);
-    Tournament.hasOne(models.League);
+    Tournament.belongsTo(models.League);
   };
   return Tournament;
 };

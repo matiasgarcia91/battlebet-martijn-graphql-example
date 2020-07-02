@@ -9,7 +9,6 @@ module.exports = class FootballAPI extends RESTDataSource {
 
   async getCompetitions() {
     const data = await this.get(`competitions?${token}`);
-    console.log(data);
     return data;
   }
 

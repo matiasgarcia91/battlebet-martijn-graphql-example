@@ -5,17 +5,18 @@ module.exports = (sequelize, DataTypes) => {
     {
       name: DataTypes.STRING,
       LeagueId: { type: DataTypes.INTEGER, allowNull: false },
+      logo: DataTypes.STRING,
     },
     {}
   );
   Team.associate = function (models) {
     Team.belongsTo(models.League);
     Team.hasMany(models.Fixture, {
-      as: "team1Team",
+      as: "homeTeam",
       foreignKey: { name: "team1" },
     });
     Team.hasMany(models.Fixture, {
-      as: "team2Team",
+      as: "awayTeam",
       foreignKey: { name: "team2" },
     });
     Team.hasMany(models.Fixture, {

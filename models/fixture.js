@@ -11,18 +11,18 @@ module.exports = (sequelize, DataTypes) => {
       FTScoreTeam1: DataTypes.INTEGER,
       FTScoreTeam2: DataTypes.INTEGER,
       winner: DataTypes.INTEGER,
-      status: DataTypes.STRING,
+      status: DataTypes.ENUM("Upcoming", "Live", "Finished"),
     },
     {}
   );
   Fixture.associate = function (models) {
     Fixture.belongsTo(models.League);
     Fixture.belongsTo(models.Team, {
-      as: "team1Team",
+      as: "homeTeam",
       foreignKey: { name: "team1" },
     });
     Fixture.belongsTo(models.Team, {
-      as: "team2Team",
+      as: "awayTeam",
       foreignKey: { name: "team2" },
     }),
       Fixture.belongsTo(models.Team, {

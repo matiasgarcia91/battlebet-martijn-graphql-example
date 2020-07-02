@@ -15,6 +15,7 @@ module.exports = class APIFootball extends RESTDataSource {
 
   async getLeagues() {
     const data = await this.get(`leagues`);
+    console.log(data);
     return data.api.leagues;
   }
 

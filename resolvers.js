@@ -48,30 +48,42 @@ module.exports = {
     user(parent, { id }, { db }, info) {
       return db.User.findByPk(id);
     },
-    leagues: async (_source, _args, { dataSources }) => {
-      return dataSources.apiFootball.getLeagues();
-    },
-    competitions: async (_source, _args, { dataSources }) => {
-      return dataSources.footballApi.getCompetitions();
+    leagues: async (_source, _args, { dataSources, db }, info) => {
+      const api2Leagues = await dataSources.footballApi.getCompetitions();
+      const dbLeagues = await db.League.findAll();
+      return [...dbLeagues, ...api2Leagues];
     },
     fixturesByLeague: async (_source, { league_id }, { dataSources }) => {
       return dataSources.apiFootball.getFixturesOfLeague(league_id);
     },
     tournaments: async (parent, _args, { db }, info) => {
-      let t = await db.Tournament.findAll({
+      return db.Tournament.findAll({
         include: [
           { model: db.User },
+          { model: db.League },
           { model: db.PlayerGroup, include: [{ model: db.User }] },
         ],
       });
-      console.log(t);
-      return t;
     },
     tournament: async (parent, { TournamentId }, { db }, info) => {
       return db.Tournament.findOne({
         where: { id: TournamentId },
         include: [
           { model: db.User },
+          {
+            model: db.League,
+            include: [
+              { model: db.Team },
+              {
+                model: db.Fixture,
+                include: [
+                  { model: db.Team, as: "homeTeam" },
+                  { model: db.Team, as: "awayTeam" },
+                  { model: db.Team, as: "winnerTeam" },
+                ],
+              },
+            ],
+          },
           { model: db.PlayerGroup, include: [{ model: db.User }] },
         ],
       });
@@ -104,11 +116,12 @@ module.exports = {
       const token = toJWT({ usrId: usr.id });
       return { token, user: usr.dataValues };
     },
-    createTournament: async (parent, { name }, { db, req }, info) => {
+    createTournament: async (parent, { name, LeagueId }, { db, req }, info) => {
       const usr = await CheckAuth(req);
       const tourn = await db.Tournament.create({
-        name: name,
+        name,
         UserId: usr.id,
+        LeagueId,
       });
       if (!tourn) return new ApolloError("Tournament not created", 400);
       const plyrgr = await db.PlayerGroup.create({
