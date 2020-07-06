@@ -56,6 +56,15 @@ module.exports = {
         onUpdate: "CASCADE",
         onDelete: "SET NULL",
       });
+    await queryInterface.addColumn("Matches", "FixtureId", {
+      type: Sequelize.INTEGER,
+      references: {
+        model: "Fixtures",
+        key: "id",
+      },
+      onUpdate: "CASCADE",
+      onDelete: "SET NULL",
+    });
   },
   down: async (queryInterface, Sequelize) => {
     await queryInterface.removeColumn("Teams", "LeagueId");
@@ -64,5 +73,6 @@ module.exports = {
     await queryInterface.removeColumn("Fixtures", "team1");
     await queryInterface.removeColumn("Fixtures", "team2");
     await queryInterface.removeColumn("Fixtures", "winner");
+    await queryInterface.removeColumn("Matches", "FixtureId");
   },
 };

@@ -18,14 +18,12 @@ module.exports = {
       player1: {
         type: Sequelize.INTEGER,
         references: { model: "Users", key: "id" },
-        allowNull: false,
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
       player2: {
         type: Sequelize.INTEGER,
         references: { model: "Users", key: "id" },
-        allowNull: false,
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },

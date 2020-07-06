@@ -33,7 +33,14 @@ async function CheckAuth(req) {
   }
 }
 
+const FIXTURE_EVENT = "FIXTURE_EVENT";
+
 module.exports = {
+  Subscription: {
+    liveFixtureEvent: {
+      subscribe: () => pubsub.asyncIterator([FIXTURE_EVENT]),
+    },
+  },
   Query: {
     readError: (parent, args, context) => {
       fs.readFileSync("/does/not/exist");
@@ -65,11 +72,25 @@ module.exports = {
         ],
       });
     },
+
     tournament: async (parent, { TournamentId }, { db }, info) => {
       return db.Tournament.findOne({
         where: { id: TournamentId },
         include: [
           { model: db.User },
+          {
+            model: db.Round,
+            include: [
+              {
+                model: db.Match,
+                include: [
+                  { model: db.User, as: "player1User" },
+                  { model: db.User, as: "player2User" },
+                  { model: db.User, as: "winnerUser" },
+                ],
+              },
+            ],
+          },
           {
             model: db.League,
             include: [
@@ -85,6 +106,26 @@ module.exports = {
             ],
           },
           { model: db.PlayerGroup, include: [{ model: db.User }] },
+        ],
+      });
+    },
+    match: async (parent, { id }, { db }, info) => {
+      return db.Match.findOne({
+        where: { id },
+        include: [
+          { model: db.User, as: "player1User" },
+          { model: db.User, as: "player2User" },
+          { model: db.User, as: "winnerUser" },
+          { model: db.Prediction, as: "predictionPlayer1" },
+          { model: db.Prediction, as: "predictionPlayer2" },
+          {
+            model: db.Fixture,
+            include: [
+              { model: db.Team, as: "homeTeam" },
+              { model: db.Team, as: "awayTeam" },
+              { model: db.Team, as: "winnerTeam" },
+            ],
+          },
         ],
       });
     },
@@ -158,6 +199,175 @@ module.exports = {
         });
       }
       return new ApolloError("Something went wrong", 400);
+    },
+    startTournament: async (parent, { TournamentId }, { db, req }, info) => {
+      const usr = await CheckAuth(req);
+      let tour = await db.Tournament.findOne({
+        where: { id: TournamentId },
+        include: [
+          { model: db.User },
+          { model: db.League, include: [{ model: db.Fixture }] },
+          { model: db.PlayerGroup, include: [{ model: db.User }] },
+        ],
+      });
+      tour = tour.get({ plain: true });
+      if (!tour) return new ApolloError("Tournament not found", 400);
+      if (tour.User.id !== usr.id)
+        return new ApolloError("You're not the admin of this tournament", 400);
+      if (tour.PlayerGroup.Users.length < 8)
+        return new ApolloError(
+          "Not enough players to start yet, you need eight",
+          400
+        );
+      let qf = await db.Round.create({ TournamentId, type: "Quarter-Final" });
+      qf = qf.get({ plain: true });
+      let matches = [];
+      for (let index = 0; index < 4; index++) {
+        let a = 0 + index;
+        let b = 7 - index;
+        let data = await db.Match.create({
+          RoundId: qf.id,
+          player1: tour.PlayerGroup.Users[a].id,
+          player2: tour.PlayerGroup.Users[b].id,
+          FixtureId: tour.League.Fixtures[index].id,
+          date: tour.League.Fixtures[index].date,
+        });
+        matches[index] = data.get({ plain: true });
+      }
+      if (matches.length < 4)
+        return new ApolloError("Something went very wrong", 400);
+      return tour;
+    },
+    fixtureEvent: async (
+      parent,
+      {
+        id,
+        HTScoreTeam1,
+        HTScoreTeam2,
+        FTScoreTeam1,
+        FTScoreTeam2,
+        status,
+        winner,
+      },
+      { db },
+      info
+    ) => {
+      let fix = db.Fixture.findByPk(id);
+      fix.HTScoreTeam1 = HTScoreTeam1;
+      fix.HTScoreTeam2 = HTScoreTeam2;
+      fix.FTScoreTeam1 = FTScoreTeam1;
+      fix.FTScoreTeam2 = FTScoreTeam2;
+      fix.status = status;
+      fix.winner = winner;
+      pubsub.publish(FIXTURE_EVENT, { liveFixtureEvent: fix });
+      return fix.save();
+    },
+    calculateResults: async (parent, { id }, { db }, info) => {
+      const match = await db.Match.findOne({
+        where: { id },
+        include: [
+          { model: db.Prediction, as: "predictionPlayer1" },
+          { model: db.Prediction, as: "predictionPlayer2" },
+          { model: db.Fixture },
+        ],
+      });
+      let scorePlayer1 = 0;
+      let scorePlayer2 = 0;
+
+      if (
+        match.dataValues.predictionPlayer1.HTScoreTeam1 ==
+        match.dataValues.Fixture.HTScoreTeam1
+      )
+        scorePlayer1 + 1;
+      if (
+        match.dataValues.predictionPlayer1.HTScoreTeam2 ==
+        match.dataValues.Fixture.HTScoreTeam2
+      )
+        scorePlayer1 + 1;
+      if (
+        match.dataValues.predictionPlayer1.FTScoreTeam1 ==
+        match.dataValues.Fixture.FTScoreTeam1
+      )
+        scorePlayer1 + 1;
+      if (
+        match.dataValues.predictionPlayer1.FTScoreTeam2 ==
+        match.dataValues.Fixture.FTScoreTeam2
+      )
+        scorePlayer1 + 1;
+      if (
+        match.dataValues.predictionPlayer1.winner ==
+        match.dataValues.Fixture.winner
+      )
+        scorePlayer1 + 1;
+      if (
+        match.dataValues.predictionPlayer1.HTScoreTeam1 ==
+        match.dataValues.Fixture.HTScoreTeam1
+      )
+        scorePlayer2 + 1;
+      if (
+        match.dataValues.predictionPlayer1.HTScoreTeam2 ==
+        match.dataValues.Fixture.HTScoreTeam2
+      )
+        scorePlayer2 + 1;
+      if (
+        match.dataValues.predictionPlayer1.FTScoreTeam1 ==
+        match.dataValues.Fixture.FTScoreTeam1
+      )
+        scorePlayer2 + 1;
+      if (
+        match.dataValues.predictionPlayer1.FTScoreTeam2 ==
+        match.dataValues.Fixture.FTScoreTeam2
+      )
+        scorePlayer2 + 1;
+      if (
+        match.dataValues.predictionPlayer1.winner ==
+        match.dataValues.Fixture.winner
+      )
+        scorePlayer2 + 1;
+      console.log(scorePlayer2);
+      match.scorePlayer1 = scorePlayer1;
+      match.scorePlayer2 = scorePlayer2;
+      match.winner =
+        scorePlayer1 > scorePlayer2
+          ? match.dataValues.player1
+          : match.dataValues.player2;
+      return match.save();
+    },
+    createPrediction: async (
+      parent,
+      {
+        MatchId,
+        HTScoreTeam1,
+        HTScoreTeam2,
+        FTScoreTeam1,
+        FTScoreTeam2,
+        winner,
+      },
+      { db, req },
+      info
+    ) => {
+      const usr = await CheckAuth(req);
+      let match = await db.Match.findByPk(MatchId, {
+        include: [
+          { model: db.User, as: "player1User" },
+          { model: db.User, as: "player2User" },
+        ],
+      });
+      let prediction = await db.Prediction.create({
+        UserId: usr.id,
+        HTScoreTeam1,
+        HTScoreTeam2,
+        FTScoreTeam1,
+        FTScoreTeam2,
+        winner,
+      });
+      if (match.dataValues.player1User.id == usr.id)
+        match.predPlayer1 = prediction.dataValues.id;
+      if (match.dataValues.player2User.id == usr.id)
+        match.predPlayer2 = prediction.dataValues.id;
+      await match.save();
+
+      return prediction;
     },
   },
 };

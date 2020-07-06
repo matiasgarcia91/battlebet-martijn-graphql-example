@@ -9,11 +9,9 @@ module.exports = (sequelize, DataTypes) => {
       },
       player1: {
         type: DataTypes.INTEGER,
-        allowNull: false,
       },
       player2: {
         type: DataTypes.INTEGER,
-        allowNull: false,
       },
       FixtureId: {
         type: DataTypes.INTEGER,
@@ -23,20 +21,21 @@ module.exports = (sequelize, DataTypes) => {
       scorePlayer1: DataTypes.INTEGER,
       scorePlayer2: DataTypes.INTEGER,
       date: DataTypes.DATE,
-      predictionPlayer1: DataTypes.INTEGER,
-      predictionPlayer2: DataTypes.INTEGER,
+      predPlayer1: DataTypes.INTEGER,
+      predPlayer2: DataTypes.INTEGER,
     },
     {}
   );
   Match.associate = function (models) {
     Match.belongsTo(models.Round);
-    Match.hasMany(models.Prediction, {
-      as: "predictionPlayer1Prediction",
-      foreignKey: { name: "predictionPlayer1" },
+    Match.belongsTo(models.Fixture);
+    Match.belongsTo(models.Prediction, {
+      as: "predictionPlayer1",
+      foreignKey: { name: "predPlayer1" },
     });
-    Match.hasMany(models.Prediction, {
-      as: "predictionPlayer2Prediction",
-      foreignKey: { name: "predictionPlayer2" },
+    Match.belongsTo(models.Prediction, {
+      as: "predictionPlayer2",
+      foreignKey: { name: "predPlayer2" },
     });
     Match.belongsTo(models.User, {
       as: "player1User",

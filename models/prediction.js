@@ -13,13 +13,13 @@ module.exports = (sequelize, DataTypes) => {
     {}
   );
   Prediction.associate = function (models) {
-    Prediction.belongsTo(models.Match, {
-      as: "predictionPlayer1Prediction",
-      foreignKey: { name: "predictionPlayer1" },
+    Prediction.hasMany(models.Match, {
+      as: "predictionPlayer1",
+      foreignKey: { name: "predPlayer1" },
     });
-    Prediction.belongsTo(models.Match, {
-      as: "predictionPlayer2Prediction",
-      foreignKey: { name: "predictionPlayer2" },
+    Prediction.hasMany(models.Match, {
+      as: "predictionPlayer2",
+      foreignKey: { name: "predPlayer2" },
     });
     Prediction.belongsTo(models.User);
   };

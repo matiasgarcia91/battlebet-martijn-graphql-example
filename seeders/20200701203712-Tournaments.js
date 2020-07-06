@@ -1,7 +1,7 @@
 "use strict";
 
 const faker = require("faker");
-const Tournaments = [...Array(5)].map((tour) => ({
+const Tournaments = [...Array(10)].map((tour) => ({
   name: faker.commerce.productName(),
   LeagueId: 1,
   createdAt: new Date(),

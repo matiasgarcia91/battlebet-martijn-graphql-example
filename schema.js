@@ -69,6 +69,39 @@ const typeDefs = gql`
     createdAt: Date
     PlayerGroup: PlayerGroup
     League: League
+    Rounds: [Round]
+  }
+
+  type Round {
+    id: ID!
+    TournamentId: ID!
+    type: String
+    createdAt: Date
+    Matches: [Match]
+  }
+
+  type Match {
+    id: ID!
+    player1User: User
+    player2User: User
+    winnerUser: User
+    FixtureId: Int
+    scorePlayer1: Int
+    scorePlayer2: Int
+    date: Date
+    predictionPlayer1: Prediction
+    predictionPlayer2: Prediction
+    Fixture: Fixture
+  }
+
+  type Prediction {
+    id: ID!
+    UserId: Int
+    HTScoreTeam1: Int
+    HTScoreTeam2: Int
+    FTScoreTeam1: Int
+    FTScoreTeam2: Int
+    winner: Int
   }
 
   type Login {
@@ -94,6 +127,7 @@ const typeDefs = gql`
     playergroup(TournamentId: ID!): PlayerGroup
     users: [User]
     checkToken: User
+    match(id: ID!): Match
   }
 
   type Mutation {
@@ -101,6 +135,29 @@ const typeDefs = gql`
     login(email: String!, password: String!): Login!
     createTournament(name: String!, LeagueId: Int!): Tournament!
     joinTournament(TournamentId: ID!): Tournament!
+    startTournament(TournamentId: ID!): Tournament!
+    calculateResults(id: Int!): Match
+    createPrediction(
+      MatchId: Int!
+      HTScoreTeam1: Int!
+      HTScoreTeam2: Int!
+      FTScoreTeam1: Int!
+      FTScoreTeam2: Int!
+      winner: Int!
+    ): Prediction!
+    fixtureEvent(
+      id: Int!
+      HTScoreTeam1: Int
+      HTScoreTeam2: Int
+      FTScoreTeam1: Int
+      FTScoreTeam2: Int
+      status: String
+      winner: Int
+    ): Fixture
+  }
+
+  type Subscription {
+    liveFixtureEvent: Fixture
   }
 `;
 

@@ -1,6 +1,6 @@
 "use strict";
 
-const PlayerGroups = [...Array(5)].map((tour) => ({
+const PlayerGroups = [...Array(10)].map((tour) => ({
   createdAt: new Date(),
   updatedAt: new Date(),
 }));

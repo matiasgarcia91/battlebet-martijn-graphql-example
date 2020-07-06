@@ -5,7 +5,7 @@ const faker = require("faker");
 const users = [...Array(10)].map((user) => ({
   userName: faker.internet.userName(),
   email: faker.internet.email(),
-  password: bcrypt.hashSync(faker.internet.password(8), SALT_ROUNDS),
+  password: bcrypt.hashSync("1234", SALT_ROUNDS),
   avatar: faker.image.avatar(),
   createdAt: new Date(),
   updatedAt: new Date(),

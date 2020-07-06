@@ -2,7 +2,7 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.addColumn("Matches", "predictionPlayer1", {
+    await queryInterface.addColumn("Matches", "predPlayer1", {
       type: Sequelize.INTEGER,
       references: {
         model: "Predictions",
@@ -11,7 +11,7 @@ module.exports = {
       onUpdate: "CASCADE",
       onDelete: "SET NULL",
     }),
-      await queryInterface.addColumn("Matches", "predictionPlayer2", {
+      await queryInterface.addColumn("Matches", "predPlayer2", {
         type: Sequelize.INTEGER,
         references: {
           model: "Predictions",
@@ -22,7 +22,7 @@ module.exports = {
       });
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn("Matches", "predictionPlayer1");
-    await queryInterface.removeColumn("Matches", "predictionPlayer2");
+    await queryInterface.removeColumn("Matches", "predPlayer1");
+    await queryInterface.removeColumn("Matches", "predPlayer2");
   },
 };

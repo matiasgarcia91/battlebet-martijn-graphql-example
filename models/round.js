@@ -4,7 +4,7 @@ module.exports = (sequelize, DataTypes) => {
     "Round",
     {
       TournamentId: DataTypes.NUMBER,
-      type: DataTypes.STRING,
+      type: DataTypes.ENUM("Quarter-Final", "Semi-Final", "Final"),
     },
     {}
   );

@@ -29,6 +29,7 @@ module.exports = (sequelize, DataTypes) => {
         as: "winnerTeam",
         foreignKey: { name: "winner" },
       });
+    Fixture.hasMany(models.Match);
     {
     }
   };
