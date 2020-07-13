@@ -124,7 +124,7 @@ const typeDefs = gql`
 
   type myTournaments {
     adminTournaments: [Tournament]
-    playerTournaments: [UserPlayerGroup]
+    playerTournaments: [Tournament]
   }
 
   type Query {

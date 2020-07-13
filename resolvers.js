@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const { SALT_ROUNDS } = require("./config/constants");
 const { toJWT, toData } = require("./auth/jwt");
 const User = require("./models").User;
+const { Op } = require("sequelize");
 
 async function CheckAuth(req) {
   const auth =
@@ -82,7 +83,7 @@ module.exports = {
           { model: db.PlayerGroup, include: [{ model: db.User }] },
         ],
       });
-      const playerTournaments = await db.UsersPlayerGroup.findAll({
+      const playerTournamentsFull = await db.UsersPlayerGroup.findAll({
         where: { UserId: parseInt(usr.id) },
         include: [
           {
@@ -90,6 +91,7 @@ module.exports = {
             include: [
               {
                 model: db.Tournament,
+                where: { [Op.not]: [{ UserId: usr.id }] },
                 include: [
                   { model: db.User },
                   { model: db.League },
@@ -100,6 +102,16 @@ module.exports = {
           },
         ],
       });
+      const playerTournamentsFilter = playerTournamentsFull.filter(
+        (plyrgrp) => {
+          if (plyrgrp.PlayerGroup !== null) return plyrgrp;
+        }
+      );
+
+      const playerTournaments = playerTournamentsFilter.map(
+        (plyrgrp) => plyrgrp.PlayerGroup.Tournament
+      );
+
       return { adminTournaments, playerTournaments };
     },
 
