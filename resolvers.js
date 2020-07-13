@@ -72,6 +72,36 @@ module.exports = {
         ],
       });
     },
+    myTournaments: async (parent, _args, { db, req }, info) => {
+      const usr = await CheckAuth(req);
+      const adminTournaments = await db.Tournament.findAll({
+        where: { UserId: usr.id },
+        include: [
+          { model: db.User },
+          { model: db.League },
+          { model: db.PlayerGroup, include: [{ model: db.User }] },
+        ],
+      });
+      const playerTournaments = await db.UsersPlayerGroup.findAll({
+        where: { UserId: parseInt(usr.id) },
+        include: [
+          {
+            model: db.PlayerGroup,
+            include: [
+              {
+                model: db.Tournament,
+                include: [
+                  { model: db.User },
+                  { model: db.League },
+                  { model: db.PlayerGroup, include: [{ model: db.User }] },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+      return { adminTournaments, playerTournaments };
+    },
 
     tournament: async (parent, { TournamentId }, { db }, info) => {
       return db.Tournament.findOne({
@@ -168,11 +198,12 @@ module.exports = {
       const plyrgr = await db.PlayerGroup.create({
         TournamentId: tourn.dataValues.id,
       });
-      if (plyrgr)
-        db.UsersPlayerGroup.create({
-          PlayerGroupId: plyrgr.dataValues.id,
-          UserId: usr.id,
-        });
+      if (!plyrgr) return new ApolloError("Playergroup not created", 400);
+      const userplyrgr = await db.UsersPlayerGroup.create({
+        PlayerGroupId: plyrgr.dataValues.id,
+        UserId: usr.id,
+      });
+      if (!userplyrgr) return new ApolloError("Admin not in playergroup", 400);
       return tourn;
     },
     joinTournament: async (parent, { TournamentId }, { db, req }, info) => {

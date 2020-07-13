@@ -113,6 +113,18 @@ const typeDefs = gql`
     id: ID!
     TournamentId: ID!
     Users: [User]
+    Tournament: Tournament
+  }
+
+  type UserPlayerGroup {
+    UserId: ID
+    PlayerGroupId: ID
+    PlayerGroup: PlayerGroup
+  }
+
+  type myTournaments {
+    adminTournaments: [Tournament]
+    playerTournaments: [UserPlayerGroup]
   }
 
   type Query {
@@ -128,6 +140,7 @@ const typeDefs = gql`
     users: [User]
     checkToken: User
     match(id: ID!): Match
+    myTournaments: myTournaments
   }
 
   type Mutation {
