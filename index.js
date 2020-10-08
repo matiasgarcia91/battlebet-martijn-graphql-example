@@ -1,11 +1,42 @@
 const express = require("express");
-const loggerMiddleWare = require("morgan");
-const corsMiddleWare = require("cors");
-const { PORT } = require("./config/constants");
-const authRouter = require("./routers/auth");
-const authMiddleWare = require("./auth/middleware");
+const { ApolloServer } = require("apollo-server-express");
+const typeDefs = require("./schema");
+const resolvers = require("./resolvers");
+const APIFootball = require("./APIs/api-football/api-football");
+const User = require("./models").User;
+const db = require("./models");
+const { PORT, APIFootballURL } = require("./config/constants");
+const { toData } = require("./auth/jwt");
+const FootballAPI = require("./APIs/football-api/FootballApi");
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  dataSources: () => {
+    return { apiFootball: new APIFootball(), footballApi: new FootballAPI() };
+  },
+  context: ({ req }) => {
+    // // { req }
+    // {
+    //   const auth =
+    //     req.headers.authorization && req.headers.authorization.split(" ");
+    //   if (!auth) return { db };
+    //   const token = auth[1];
+    //   try {
+    //     const jwtdata = toData(token);
+    //     const user = User.findOne({ where: { id: jwtdata.usrId } });
+    //     return {
+    //       db,
+    //       user,
+    //     };
+    //   } catch (e) {
+    //     console.log(e);
+    return { db, req };
+  },
+});
 
 const app = express();
+server.applyMiddleware({ app });
 
 /**
  * Middlewares
@@ -33,7 +64,7 @@ const app = express();
  *
  */
 
-app.use(loggerMiddleWare("dev"));
+// app.use(loggerMiddleWare("dev"));
 
 /**
  *
@@ -46,8 +77,8 @@ app.use(loggerMiddleWare("dev"));
  *
  */
 
-const bodyParserMiddleWare = express.json();
-app.use(bodyParserMiddleWare);
+// const bodyParserMiddleWare = express.json();
+// app.use(bodyParserMiddleWare);
 
 /**
  *
@@ -65,7 +96,7 @@ app.use(bodyParserMiddleWare);
  *
  */
 
-app.use(corsMiddleWare());
+// app.use(corsMiddleWare());
 
 /**
  *
@@ -81,11 +112,11 @@ app.use(corsMiddleWare());
  * - the delay time can be configured in the package.json
  */
 
-if (process.env.DELAY) {
-  app.use((req, res, next) => {
-    setTimeout(() => next(), parseInt(process.env.DELAY));
-  });
-}
+// if (process.env.DELAY) {
+//   app.use((req, res, next) => {
+//     setTimeout(() => next(), parseInt(process.env.DELAY));
+//   });
+// }
 
 /**
  *
@@ -120,40 +151,40 @@ if (process.env.DELAY) {
  */
 
 // GET endpoint for testing purposes, can be removed
-app.get("/", (req, res) => {
-  res.send("Hi from express");
-});
+// app.get("/", (req, res) => {
+//   res.send("Hi from express");
+// });
 
-// POST endpoint for testing purposes, can be removed
-app.post("/echo", (req, res) => {
-  res.json({
-    youPosted: {
-      ...req.body,
-    },
-  });
-});
+// // POST endpoint for testing purposes, can be removed
+// app.post("/echo", (req, res) => {
+//   res.json({
+//     youPosted: {
+//       ...req.body,
+//     },
+//   });
+// });
 
-// POST endpoint which requires a token for testing purposes, can be removed
-app.post("/authorized_post_request", authMiddleWare, (req, res) => {
-  // accessing user that was added to req by the auth middleware
-  const user = req.user;
-  // don't send back the password hash
-  delete user.dataValues["password"];
+// // POST endpoint which requires a token for testing purposes, can be removed
+// app.post("/authorized_post_request", authMiddleWare, (req, res) => {
+//   // accessing user that was added to req by the auth middleware
+//   const user = req.user;
+//   // don't send back the password hash
+//   delete user.dataValues["password"];
 
-  res.json({
-    youPosted: {
-      ...req.body,
-    },
-    userFoundWithToken: {
-      ...user.dataValues,
-    },
-  });
-});
+//   res.json({
+//     youPosted: {
+//       ...req.body,
+//     },
+//     userFoundWithToken: {
+//       ...user.dataValues,
+//     },
+//   });
+// });
 
-app.use("/", authRouter);
+// app.use("/", authRouter);
 
 // Listen for connections on specified port (default is port 4000)
 
-app.listen(PORT, () => {
-  console.log(`Listening on port: ${PORT}`);
-});
+app.listen({ port: PORT }, () =>
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
+);
